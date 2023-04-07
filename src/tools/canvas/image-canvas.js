@@ -44,7 +44,7 @@ export class ImageCanvas {
       img = url;
     }
 
-    let W = (window.screen.width - 240 - 350) / 2;
+    let W = (document.body.clientWidth - 240 - 350) / 2;
     if (img.width > W || img.height > W) {
       const canvas = document.createElement("canvas");
       if (img.width > W) {
@@ -100,6 +100,7 @@ export class ImageCanvas {
     // var brush = new EraserBrush(fabricCanvas());
     brush.width = getBrushWidth();
     brush.color = '#00dd00';
+
     drawer.isDrawingMode = true;
     drawer.freeDrawingBrush = brush;
     let paths = [];
@@ -107,8 +108,10 @@ export class ImageCanvas {
       ghostCanvas().clear();
       let path = new fabric.Path(opt.path.path, {
         fill: 'transparent',
+        stroke: 'white',
         strokeWidth: getBrushWidth(),
-        strokeLineCap: 'round'
+        strokeLineCap: 'round',
+        selectable: false,
       });
       paths.push(path);
       paths.map(p => ghostCanvas().add(p));
@@ -125,17 +128,140 @@ export class ImageCanvas {
           lockMovementX: true,
           lockMovementY: true,
           lockRotation: true,
-          hoverCursor: 'pointer',
-          globalCompositeOperation: 'source-in'
+          hoverCursor: 'default',
+          // globalCompositeOperation: 'source-in'
         });
         ghost.add(im);
       });
+
+      // fabric.Image.fromURL("./../../assets/images/cloth_mask.png", function (im) {
+      //   im.set({
+      //     left: ghost.width / 2,
+      //     top: ghost.height / 2,
+      //     scaleX: 0.3,
+      //     scaleY: 0.3,
+      //     hoverCursor: 'default',
+      //     hasControls: false,
+      //     hasBorders: false,
+      //     selectable: false,
+      //     lockMovementX: true,
+      //     lockMovementY: true,
+      //     lockRotation: true,
+      //   });
+      //   im.scaleToWidth(ghost.width);
+      //   ghost.add(im);
+      // });
 
       if (state().eraseMode) {
         // opt.path.globalCompositeOperation = 'destination-in';
         opt.path.globalCompositeOperation = 'destination-out';
       }
     });
+
+
+    // fabric.Image.fromURL('./../../assets/images/cloth_mask_1.png', function (im) {
+
+    //   // Apply a grayscale filter to the image
+    //   im.filters.push(new fabric.Image.filters.Grayscale());
+    //   im.applyFilters();
+    //   // Apply a convolution filter to the image to extract the edge
+    //   im.filters.push(new fabric.Image.filters.Convolute({
+    //     matrix: [1, 1, 1,
+    //       1, -8, 1,
+    //       1, 1, 1]
+    //   }));
+    //   im.applyFilters();
+
+    //   var tempCanvas = fabric.util.createCanvasElement();
+    //   tempCanvas.width = im.width;
+    //   tempCanvas.height = im.height;
+    //   var ctx = tempCanvas.getContext('2d');
+    //   ctx.drawImage(im.getElement(), 0, 0);
+
+    //   // get the pixel data from the temporary canvas
+    //   var alphaData = ctx.getImageData(0, 0, im.width, im.height).data;
+
+
+    //   // Get the alpha channel data of the image as an array
+    //   // var alphaData = im.getContext().getImageData(0, 0, im.width, im.height).data;
+    //   // Create a new polygon object
+    //   var polygon = new fabric.Polygon([], {
+    //     left: 0,
+    //     top: 0,
+    //     stroke: '#fff', // set the stroke color of the polygon
+    //     strokeWidth: 2, // set the stroke width of the polygon
+    //     fill: '#000' // set the fill color of the polygon
+    //   });
+    //   // Set the polygon's points based on the alpha channel data
+    //   var points = [];
+    //   for (var y = 0; y < im.height; y++) {
+    //     for (var x = 0; x < im.width; x++) {
+    //       var index = (y * im.width + x) * 4 + 3; // get the alpha value of the pixel
+    //       if (alphaData[index] > 0) {
+    //         points.push({ x: x, y: y });
+    //       }
+    //     }
+    //   } 
+    //     polygon.set({ points: points });
+    //     console.log(polygon.)
+    //   // Add the polygon to the canvas
+    //   ghostCanvas().add(polygon);
+
+    //   return;
+
+
+
+    //   // im.set({
+    //   //   left: ghost.width / 2,
+    //   //   top: ghost.height / 2,
+    //   //   hoverCursor: 'default',
+    //   //   hasControls: false,
+    //   //   hasBorders: false,
+    //   //   selectable: false,
+    //   //   lockMovementX: true,
+    //   //   lockMovementY: true,
+    //   //   lockRotation: true,
+    //   // });
+    //   // im.scaleToWidth(ghost.width);
+    //   // fabricCanvas().add(im);
+
+    //   var tempCanvas = fabric.util.createCanvasElement();
+    //   tempCanvas.width = im.width;
+    //   tempCanvas.height = im.height;
+    //   var ctx = tempCanvas.getContext('2d');
+    //   ctx.drawImage(im.getElement(), 0, 0);
+
+    //   // get the pixel data from the temporary canvas
+    //   var imageData = ctx.getImageData(0, 0, im.width, im.height).data;
+
+    //   // create a path object from the pixel data
+    //   var pathString = ''; console.log(imageData)
+    //   for (var i = 0; i < imageData.length; i += 4) {
+    //     var x = (i / 4) % im.width;
+    //     var y = Math.floor((i / 4) / im.width);
+    //     var alpha = imageData[i + 3];
+    //     if (alpha > 200) {
+    //       pathString += (pathString === '' ? 'M' : 'L') + x + ',' + y;
+    //     }
+    //     i = i + 120;
+    //   }
+    //   // console.log(pathString)
+    //   var path = new fabric.Path(pathString, {
+    //     left: ghost.width / 2,
+    //     top: ghost.height / 2,
+    //     stroke: 'black',
+    //     strokeWidth: 1,
+    //     fill: 'red'
+    //   });
+    //   path.scaleToWidth(ghost.width);
+
+    //   ghostCanvas().clear();
+    //   ghostCanvas().add(path);
+    //   console.log(path)
+    // });
+
+
+
 
 
     // fabric.Image.fromURL(img.toDataURL(), function (im) {

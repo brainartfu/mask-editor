@@ -7,6 +7,7 @@ import TextToolbar from "./TextToolbar";
 import BackgroundToolbar from "./BackgroundToolbar";
 import ImageToolbar from "./ImageToolbar";
 import ShadowToolbar from "./ShadowToolbar";
+import { drawerCanvas, ghostCanvas } from "@/state/utils";
 const drawerWidth = 350;
 export default function Toolbar() {
   const activeTool = useStore((s) => s.activeTool);
@@ -31,6 +32,8 @@ export default function Toolbar() {
 }
 
 function getToolNav(active) {
+  drawerCanvas().isDrawingMode = active === ToolName.IMAGE;
+
   switch (active) {
     case ToolName.EFFECTS:
       return <EffectsToolbar />;

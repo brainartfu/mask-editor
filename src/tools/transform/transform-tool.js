@@ -80,7 +80,25 @@ export class TransformTool {
         obj[prop] = !obj[prop];
       });
     tools().canvas.render();
-    // ghostCanvas().loadFromJSON(fabricCanvas().toJSON());
+
+    if (direction === 'vertical') {
+      ghostCanvas().getObjects().forEach(function (obj) {
+        obj.set('flipX', !obj.flipX);
+      });
+      drawerCanvas().getObjects().forEach(function (obj) {
+        obj.set('flipX', !obj.flipX);
+      });
+    } else if (direction === 'horizontal') {
+      ghostCanvas().getObjects().forEach(function (obj) {
+        obj.set('flipY', !obj.flipY);
+      });
+      drawerCanvas().getObjects().forEach(function (obj) {
+        obj.set('flipY', !obj.flipY);
+      });
+    }
+
+    ghostCanvas().renderAll();
+    drawerCanvas().renderAll();
   }
 
   rotateFixed(degrees) {
