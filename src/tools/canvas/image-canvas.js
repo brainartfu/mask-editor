@@ -129,7 +129,7 @@ export class ImageCanvas {
           lockMovementY: true,
           lockRotation: true,
           hoverCursor: 'default',
-          // globalCompositeOperation: 'source-in'
+          globalCompositeOperation: 'source-in'
         });
         ghost.add(im);
       });

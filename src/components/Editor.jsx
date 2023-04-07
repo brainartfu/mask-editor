@@ -84,7 +84,7 @@ export function ImageEditor() {
     if (brushWidth && drawerCanvas()) {
       let brush = new fabric.PencilBrush(drawerCanvas());
       brush.width = brushWidth;
-      brush.color = eraseMode ? '#ff000088' : '#00dd0088';
+      brush.color = eraseMode ? '#ff0000' : '#00dd00';
       drawerCanvas().freeDrawingBrush = brush;
       drawerCanvas().renderAll();
     }
