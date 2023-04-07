@@ -1,0 +1,33 @@
+import { initFabric } from "@/utils/initFabric";
+import { ObjectTool } from "../objects/object-tool";
+import { useStore } from "../state/store";
+import { state } from "../state/utils";
+import { ImageCanvas } from "./canvas/image-canvas";
+import { CropTool } from "./crop/crop-tool";
+import { ExportTool } from "./export/export-tool";
+import { FilterTool } from "./filter/filter-tool";
+import { HistoryTool } from "./history/history-tool";
+import { ImportTool } from "./import/import-tool";
+import { MergeTool } from "./merge/merge-tool";
+import { TextTool } from "./text/text-tool";
+import { TransformTool } from "./transform/transform-tool";
+import { ZoomTool } from "./zoom-tool";
+
+export function initTools(canvasEl) {
+  const fabric = initFabric(canvasEl);
+  state().editor.fabric = fabric;
+  useStore.setState({ fabric });
+  state().editor.tools = {
+    canvas: new ImageCanvas(),
+    objects: new ObjectTool(),
+    zoom: new ZoomTool(),
+    history: new HistoryTool(),
+    filter: new FilterTool(),
+    crop: new CropTool(),
+    merge: new MergeTool(),
+    text: new TextTool(),
+    transform: new TransformTool(),
+    import: new ImportTool(),
+    export: new ExportTool(),
+  };
+}
