@@ -12,11 +12,12 @@ import { MergeTool } from "./merge/merge-tool";
 import { TextTool } from "./text/text-tool";
 import { TransformTool } from "./transform/transform-tool";
 import { ZoomTool } from "./zoom-tool";
+import { BrushTool } from "./brush/brush-tool";
 
-export function initTools(canvasEl) {
+export function initTools(canvasEl, editCanvas, bgCanvas, mainRef) {
   const fabric = initFabric(canvasEl);
   state().editor.fabric = fabric;
-  useStore.setState({ fabric });
+  useStore.setState({ fabric, init: true, mainRef });
   state().editor.tools = {
     canvas: new ImageCanvas(),
     objects: new ObjectTool(),
@@ -29,5 +30,6 @@ export function initTools(canvasEl) {
     transform: new TransformTool(),
     import: new ImportTool(),
     export: new ExportTool(),
+    brush: new BrushTool(editCanvas, bgCanvas, mainRef)
   };
 }

@@ -35,10 +35,6 @@ export const useStore = create(
     immer((set, get) => ({
       editor: null,
       fabric: null,
-      drawer: null,
-      ghost: null,
-      eraseMode: false,
-      brushWidth: 20,
       config: DEFAULT_CONFIG,
       zoom: 1,
       dirty: false,
@@ -54,6 +50,8 @@ export const useStore = create(
       replaced: false,
       panel: "default",
       bottomNav: false,
+      init: false,
+      originalImage: null,
       openPanels: {
         newImage: false,
         history: false,
@@ -65,10 +63,6 @@ export const useStore = create(
       ...createFilterSlice(set, get),
       ...createCropSlice(set, get),
       // actions
-
-      setBrushWidth: v => set(state => { state.brushWidth = v }),
-      setEraseMode: v => set(state => { state.eraseMode = v }),
-
       setZoom: (newZoom) =>
         set((state) => {
           state.zoom = newZoom;
@@ -105,6 +99,10 @@ export const useStore = create(
       setCanvasSize: (size) =>
         set((state) => {
           state.canvasSize = size;
+        }),
+      setOriginalImage: (image) =>
+        set((state) => {
+          state.originalImage = image;
         }),
       setActiveTool: (toolName, overlay) =>
         set((state) => {

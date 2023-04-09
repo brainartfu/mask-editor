@@ -2,6 +2,7 @@ import { state, tools } from "@/state/utils";
 
 export default function ImageToolbar() {
   // tools().transform.resetStraightenAnchor();
+
   return (
     <div>
       <div>

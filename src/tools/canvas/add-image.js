@@ -10,6 +10,7 @@ export async function addImage(
   const img = await loadFabricImage(url);
   if (!img) return;
   return new Promise((resolve) => {
+    console.log('addImage')
     img.name = loadStateName;
     img.opacity = 0;
     // use either main image or canvas dimensions as outer boundaries for scaling new image

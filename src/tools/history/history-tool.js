@@ -88,6 +88,7 @@ export class HistoryTool {
 
           // resize canvas if needed
           if (item.canvasWidth && item.canvasHeight) {
+            console.log('resize', item.height, item.width)
             tools().canvas.resize(item.canvasWidth, item.canvasHeight, {
               resizeHelper: false,
               applyZoom: false,

@@ -1,8 +1,7 @@
-import { fabric } from "fabric";
 import { useStore } from "@/state/store";
-import { drawerCanvas, ghostCanvas, state, tools } from "@/state/utils";
+import { state, tools } from "@/state/utils";
 import deepmerge from "deepmerge";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Toaster, toast } from "react-hot-toast";
 import {
@@ -19,7 +18,8 @@ import Toolbar from "./toolbar";
 import { ActiveToolOverlay } from "@/state/editor-state";
 import { Toolbar as MuiToolbar } from "@mui/material";
 import useResizeObserver from "use-resize-observer";
-import { fabricCanvas } from "@/utils/utils";
+import { FaDownload, FaUndo } from 'react-icons/fa';
+
 /**
  *
  * @param {HTMLElement} el
@@ -37,14 +37,17 @@ export function observeSize(el, callback) {
 
 export function ImageEditor() {
   const canvasRef = useRef(null);
+  const editCanvasRef = useRef(null);
+  const bgCanvasRef = useRef(null);
+  const mainRef = useRef(null);
   const activeTool = useStore((s) => s.activeTool);
   const canUndo = useStore((s) => s.history.canUndo);
   const canRedo = useStore((s) => s.history.canRedo);
   const activeToolOverlay = useStore((s) => s.activeToolOverlay);
-  const brushWidth = useStore((s) => s.brushWidth);
-  const eraseMode = useStore((s) => s.eraseMode);
-
+  const [restore, setRestore] = useState(false);
+  const [brushWidth, setBrushWidth] = useState(10);
   const panContainerRef = useRef(null);
+  const canvasRefSub = useRef(null);
   const { width, height } = useResizeObserver({
     ref: panContainerRef,
   });
@@ -67,8 +70,10 @@ export function ImageEditor() {
     if (tools().canvas.getMainImage()) return;
     const uploadedFile = new UploadedFile(files[0]);
     if (state().config.tools?.import?.openDroppedImageAsBackground ?? false) {
+      // console.log('openBackgroundImage')
       tools().import.openBackgroundImage(uploadedFile);
     } else {
+      // console.log('openUploadedFile')
       tools().import.openUploadedFile(uploadedFile);
     }
   }, []);
@@ -81,19 +86,9 @@ export function ImageEditor() {
   });
 
   useEffect(() => {
-    if (brushWidth && drawerCanvas()) {
-      let brush = new fabric.PencilBrush(drawerCanvas());
-      brush.width = brushWidth;
-      brush.color = eraseMode ? '#ff0000' : '#00dd00';
-      drawerCanvas().freeDrawingBrush = brush;
-      drawerCanvas().renderAll();
-    }
-  }, [brushWidth, eraseMode]);
-
-  useEffect(() => {
     // editor already booted
     if (state().fabric) return;
-    initTools(document.getElementById('canvas'));//(canvasRef.current);
+    initTools(canvasRef.current, editCanvasRef.current, bgCanvasRef.current, mainRef.current);
     if (state().config.ui?.defaultTool) {
       state().setActiveTool(state().config.ui?.defaultTool, null);
     }
@@ -111,7 +106,15 @@ export function ImageEditor() {
       tools().zoom.fitToScreen();
     }
   }, [dimensions, activeTool]);
-
+  const handleRestore = () => {
+    const state = !restore;
+    setRestore(state)
+    tools().brush.setRestore(state);
+  }
+  const handleBrushWidth = (val) => {
+    setBrushWidth(val);
+    tools().brush.setBrushWidth(val)
+  }
   return (
     <div className="flex h-full w-full">
       <Sidebar />
@@ -132,6 +135,7 @@ export function ImageEditor() {
             </em>
           </div>
         ) : (
+        <>
           <MuiToolbar>
             <button
               onClick={async () => {
@@ -145,9 +149,12 @@ export function ImageEditor() {
             </button>
             <button
               onClick={() => {
+                // tools().brush.undoErasing();
                 if (tools().history.canUndo()) {
                   tools().history.undo();
-                } else toast.error("Nothing to undo");
+                } else {
+                  // toast.error("Nothing to undo");
+                }
               }}
               disabled={!canUndo}
               className="btn btn-secondary"
@@ -156,9 +163,12 @@ export function ImageEditor() {
             </button>
             <button
               onClick={() => {
+                // tools.brush.redoErasing();
                 if (tools().history.canRedo()) {
                   tools().history.redo();
-                } else toast.error("Nothing to redo");
+                } else {
+                  // toast.error("Nothing to redo");
+                }
               }}
               disabled={!canRedo}
               className="btn btn-secondary"
@@ -170,7 +180,7 @@ export function ImageEditor() {
                 state().setActiveTool(null, ActiveToolOverlay.Crop);
                 state().setDirty(true);
               }}
-              className="btn btn-primary"
+              className="btn btn-outline"
               disabled={activeToolOverlay === ActiveToolOverlay.Crop}
             >
               Crop
@@ -185,24 +195,65 @@ export function ImageEditor() {
             >
               Done
             </button>
+            <button 
+              onClick={() => handleRestore()} 
+              className={restore?"btn btn-primary":"btn"}
+            >
+              Restore
+            </button>   
+            <button 
+              onClick={() => tools().brush.download()} 
+              className="btn btn-primary"
+            >
+              Download
+            </button>               
           </MuiToolbar>
-        )}
-        <main id="canvasWrapper" style={{ backgroundImage: `url('/assets/images/empty-canvas-bg.png')` }}
-          className="relative max-h-screen flex overflow-hidden outline-none">
-          {/* @ts-ignore */}
-          <CanvasWrapper panContainerRef={panContainerRef} ref={canvasRef} />
-          <div>
-            <canvas id="ghost" />
+          <div style={{display: 'flex', alignItem: 'center'}}>
+            <div style={{marginBottom: 20, marginTop: 20, marginRight: 20}}>
+              <label className="pr-10">Brush Width:</label>
+              <input
+                type="range"
+                min="1"
+                max="50"
+                value={brushWidth}
+                onChange={(e) => handleBrushWidth(e.target.value)}
+                 
+              />
+            </div>
+            {/*  <button onClick={() => {
+              const canvas = canvasRef.current;
+              const dataURL = canvas.toDataURL("image/png");
+              const downloadLink = document.createElement("a");
+              downloadLink.href = dataURL;
+              downloadLink.download = "erased-background.png";
+              downloadLink.click();
+            }}
+            className="btn btn-outline"
+            >
+             <FaDownload size="20" />
+            </button>  */}  
+            <button onClick={() => {
+              tools().brush.undoErasing();
+            }}
+            className="btn btn-outline ml-5"
+            >
+             <FaUndo size="20" />
+            </button>            
+            
           </div>
+        </>
+        )}
+        <main
+          ref={mainRef}
+          style={{
+            backgroundImage: `url('/assets/images/empty-canvas-bg.png')`,
+          }}
+          className="relative max-h-screen flex-1 flex overflow-hidden outline-none"
+        >
+          {/* @ts-ignore */}
+          <CanvasWrapper panContainerRef={panContainerRef} ref={canvasRef} editCanvasRef={editCanvasRef} bgCanvasRef={bgCanvasRef} editing={acceptedFiles[0]?true:false} />
           <LoadingIndicator />
         </main>
-        <div className="p-5">
-          <label htmlFor="eraseChk">Eraser:&nbsp;</label>
-          <input id="eraseChk" type="checkbox" checked={eraseMode} onChange={e => state().setEraseMode(!eraseMode)} />
-          &nbsp;&nbsp;&nbsp;&nbsp;
-          <label>Brush width:&nbsp;</label>
-          <input type="range" style={{ marginTop: 3 }} min={5} max={50} value={brushWidth} onChange={e => state().setBrushWidth(e.target.value)} />
-        </div>
         <Toaster />
       </div>
       <Toolbar />
