@@ -1,7 +1,7 @@
 import { fabric } from "fabric";
 import { ObjectName } from "../../objects/object-name";
 import { staticObjectConfig } from "../../objects/static-object-config";
-import { drawerCanvas, fabricCanvas, ghostCanvas, state, tools } from "../../state/utils";
+import { fabricCanvas, state, tools, getEditCanvas, getBgCanvas} from "../../state/utils";
 
 export class TransformTool {
   get straightenAnchor() {
@@ -14,7 +14,6 @@ export class TransformTool {
    * Rotate canvas left by 90 degrees.
    */
   rotateLeft() {
-    this.rotate1(-90);
     this.rotateFixed(-90);
   }
 
@@ -22,33 +21,7 @@ export class TransformTool {
    * Rotate canvas right by 90 degrees.
    */
   rotateRight() {
-    this.rotate1(90);
     this.rotateFixed(90);
-  }
-
-  rotate1(angle) {
-    let canvasCenter = new fabric.Point(ghostCanvas().getWidth() / 2, ghostCanvas().getHeight() / 2) // center of canvas
-    let radians = fabric.util.degreesToRadians(angle)
-
-    drawerCanvas().getObjects().forEach((obj) => {
-      let objectOrigin = new fabric.Point(obj.left, obj.top)
-      let new_loc = fabric.util.rotatePoint(objectOrigin, canvasCenter, radians)
-      obj.top = new_loc.y
-      obj.left = new_loc.x
-      obj.angle += angle //rotate each object buy the same angle
-      obj.setCoords()
-    });
-    drawerCanvas().renderAll();
-
-    ghostCanvas().getObjects().forEach((obj) => {
-      let objectOrigin = new fabric.Point(obj.left, obj.top)
-      let new_loc = fabric.util.rotatePoint(objectOrigin, canvasCenter, radians)
-      obj.top = new_loc.y
-      obj.left = new_loc.x
-      obj.angle += angle //rotate each object buy the same angle
-      obj.setCoords()
-    });
-    ghostCanvas().renderAll();
   }
 
   /**
@@ -74,31 +47,13 @@ export class TransformTool {
    */
   flip(direction) {
     const prop = direction === "horizontal" ? "flipY" : "flipX";
+    tools().brush.flip(prop);
     tools()
       .objects.getAll()
       .forEach((obj) => {
         obj[prop] = !obj[prop];
       });
     tools().canvas.render();
-
-    if (direction === 'vertical') {
-      ghostCanvas().getObjects().forEach(function (obj) {
-        obj.set('flipX', !obj.flipX);
-      });
-      drawerCanvas().getObjects().forEach(function (obj) {
-        obj.set('flipX', !obj.flipX);
-      });
-    } else if (direction === 'horizontal') {
-      ghostCanvas().getObjects().forEach(function (obj) {
-        obj.set('flipY', !obj.flipY);
-      });
-      drawerCanvas().getObjects().forEach(function (obj) {
-        obj.set('flipY', !obj.flipY);
-      });
-    }
-
-    ghostCanvas().renderAll();
-    drawerCanvas().renderAll();
   }
 
   rotateFixed(degrees) {
@@ -107,30 +62,29 @@ export class TransformTool {
     const currentRotateAngle = this.straightenAnchor.data.rotateAngle || 0;
     degrees = Math.round(degrees / 90) * 90;
     const newAngle =
-      currentRotateAngle +
-      (this.straightenAnchor.data.straightenAngle || 0) +
-      degrees;
+    currentRotateAngle +
+    (this.straightenAnchor.data.straightenAngle || 0) +
+    degrees;
+
+    tools().brush.rotate(degrees);
+            console.log('rotateFixed', item.height, item.width)
 
     // noinspection JSSuspiciousNameCombination
-    // tools().canvas.resize(state().original.height, state().original.width, {
-    //   applyZoom: false,
-    //   resizeHelper: false,
-    // });
+    tools().canvas.resize(state().original.height, state().original.width, {
+      applyZoom: false,
+      resizeHelper: false,
+    });
 
     this.storeObjectsRelationToHelper();
-
     this.straightenAnchor.rotate(newAngle);
     this.straightenAnchor.data.rotateAngle = currentRotateAngle + degrees;
 
     this.straightenAnchor.center();
     this.transformObjectsBasedOnHelper();
     // pattern frames dont resize properly if we dont zoom on next paint
-
     requestAnimationFrame(() => {
       tools().zoom.fitToScreen();
     });
-
-    // ghostCanvas().loadFromJSON(fabricCanvas().toJSON());
   }
 
   /**

@@ -11,6 +11,3 @@ export function tools() {
 export function fabricCanvas() {
   return state().fabric;
 }
-export function getBrushWidth() {
-  return state().brushWidth;
-}

@@ -12,10 +12,10 @@ export function fabricCanvas() {
   return state().fabric;
 }
 
-export function drawerCanvas() {
-  return state().drawer;
+export function getEditCanvas() {
+  return state().editCanvas;
 }
 
-export function ghostCanvas() {
-  return state().ghost;
+export function getBgCanvas() {
+  return state().bgCanvas;
 }

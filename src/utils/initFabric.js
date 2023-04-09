@@ -16,6 +16,7 @@ export function initFabric(canvasEl) {
   const fabricCanvas = new fabric.Canvas(canvasEl, {
     width: window.innerHeight,
     height: window.innerHeight,
+    containerClass: "fabric-editor"
   });
   fabricCanvas.preserveObjectStacking = true;
   fabricCanvas.selection = false;

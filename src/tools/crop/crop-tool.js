@@ -55,6 +55,7 @@ export class CropTool {
     return tools()
       .merge.apply()
       .then(() => {
+        tools().brush.crop(box);
         tools().canvas.resize(Math.round(box.width), Math.round(box.height), {
           applyZoom: true,
           resizeHelper: true,
@@ -69,6 +70,8 @@ export class CropTool {
 
         tools().zoom.fitToScreen();
         tools().canvas.render();
+        console.log('sdfasd')
+        state().toggleLoading(false);
       });
   }
 
