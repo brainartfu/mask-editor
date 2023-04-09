@@ -25,6 +25,7 @@ export class ImageCanvas {
 
   async addMainImage(url, loadStateName = "mainImage") {
     MAX_IMAGE_PIXELS = (tools().brush.mainRef.clientWidth || tools().brush.mainRef.offsetWidth) / 2;
+    console.log(MAX_IMAGE_PIXELS)
     if (typeof url === "string") {
       // state().toggleLoading(loadStateName);
     }
@@ -38,7 +39,7 @@ export class ImageCanvas {
     if (loadStateName == 'mainImage') {
       tools().brush.setOriginalImage(img);
     }
-    if (img.width > MAX_IMAGE_PIXELS || img.height > MAX_IMAGE_PIXELS) {
+    if ((img.width > MAX_IMAGE_PIXELS || img.height > MAX_IMAGE_PIXELS) && loadStateName !== 'drawImage') {
       const canvas = document.createElement("canvas");
       if (img.width > MAX_IMAGE_PIXELS) {
         canvas.width = MAX_IMAGE_PIXELS;
@@ -57,7 +58,7 @@ export class ImageCanvas {
       // console.log(base64);
       return new Promise((resolve) => {
         fabric.Image.fromURL(base64.toDataURL(), async (img) => {
-          await this.addMainImage(img, 'resize');
+          await this.addMainImage(img, loadStateName==="mainImage"?'resize':loadStateName);
           resolve(img);
         });
       });

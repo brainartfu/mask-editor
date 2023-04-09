@@ -40,8 +40,6 @@ export const CanvasWrapper = React.forwardRef((props, canvasRef) => {
               <div style={{position: 'relative'}}>
                 <canvas  ref={editCanvasRef} width={0} height={0} 
                   style={{
-                    top: 0,
-                    left: 0,
                   }}
                 />
                 <canvas

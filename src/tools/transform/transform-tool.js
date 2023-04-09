@@ -67,7 +67,6 @@ export class TransformTool {
     degrees;
 
     tools().brush.rotate(degrees);
-            console.log('rotateFixed', item.height, item.width)
 
     // noinspection JSSuspiciousNameCombination
     tools().canvas.resize(state().original.height, state().original.width, {

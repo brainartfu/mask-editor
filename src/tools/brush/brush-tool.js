@@ -49,7 +49,7 @@ export class BrushTool {
       const context = canvas.getContext("2d");
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
       let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const threshold = 50;
+      const threshold = 80;
       for (let i = 0; i < imageData.data.length; i += 4) {
         const red = imageData.data[i];
         const green = imageData.data[i + 1];
@@ -104,13 +104,13 @@ export class BrushTool {
   drawOverlaping() {
     console.log(this.box)
     const canvas = document.createElement('canvas');
-    canvas.width = this.box.width;
-    canvas.height = this.box.height;
+    canvas.width = this.editCanvas.width;
+    canvas.height = this.editCanvas.height;
     const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, this.box.width, this.box.height);
-    ctx.drawImage(this.bgCanvas, 0, 0, this.box.width, this.box.height);
+    ctx.clearRect(0, 0, this.editCanvas.width, this.editCanvas.height);
+    ctx.drawImage(this.bgCanvas, 0, 0, this.editCanvas.width, this.editCanvas.height);
     ctx.globalCompositeOperation = "source-in";
-    ctx.drawImage(this.editCanvas, 0, 0, this.box.width, this.box.height);
+    ctx.drawImage(this.editCanvas, 0, 0, this.editCanvas.width, this.editCanvas.height);
     ctx.globalCompositeOperation = "source-over";
     state().setReplaced(true);
     tools().canvas.addMainImage(canvas.toDataURL(), 'drawImage');
@@ -169,12 +169,12 @@ export class BrushTool {
       }
       const width = this.dimension.width;
       const height = this.dimension.height;
-      editCtx.clearRect(0, 0, this.box.width, this.box.height)
+      editCtx.clearRect(0, 0, this.editCanvas.width, this.editCanvas.height)
       editCtx.save();
-      editCtx.translate(this.box.width/2, this.box.height/2);
-      context.clearRect(0, 0, this.box.width, this.box.height)
+      editCtx.translate(this.editCanvas.width/2, this.editCanvas.height/2);
+      context.clearRect(0, 0, this.editCanvas.width, this.editCanvas.height)
       context.save();
-      context.translate(this.box.width/2, this.box.height/2);
+      context.translate(this.editCanvas.width/2, this.editCanvas.height/2);
       
       if (this.mask) {
         tempCtx.clearRect(0, 0, width, height)
@@ -219,7 +219,10 @@ export class BrushTool {
             const crop = JSON.parse(erasingData[i]);
             tleft += crop.left;
             ttop += crop.top;
-            console.log(crop)
+            if (state === 'undo') {
+              console.log(crop)
+              this.lastBox = crop
+            };
           }
           tempCtx.stroke();
           tempCtx.beginPath();
@@ -231,9 +234,18 @@ export class BrushTool {
       }
       if (erasingData.length) tempCtx.stroke();
       tempCtx.restore();
-      context.drawImage(tempCanvas, this.box.left, this.box.top, this.box.width, this.box.height, -this.box.width/2, -this.box.height/2, this.box.width, this.box.height);
+      let twidth, theight = 0;
+      if (this.box.width === this.editCanvas.width) {
+        twidth = this.editCanvas.width;
+        theight = this.editCanvas.height;
+      } else {
+        theight = this.editCanvas.width;
+        twidth = this.editCanvas.height;
+      }
+      console.log( "draw", this.box)
+      context.drawImage(tempCanvas, this.box.left, this.box.top, this.box.width, this.box.height, -twidth/2, -theight/2, twidth, theight);
       context.restore();
-      editCtx.drawImage(this.image._element, this.box.left, this.box.top, this.box.width, this.box.height, -this.box.width/2, -this.box.height/2, this.box.width, this.box.height);
+      editCtx.drawImage(this.image._element, this.box.left, this.box.top, this.box.width, this.box.height, -twidth/2, -theight/2, twidth, theight);
       editCtx.restore()
       this.erasingData = erasingData;
       this.drawOverlaping();
@@ -259,30 +271,39 @@ export class BrushTool {
     this.restore = val;
   }
   rotate(degrees) {
+    console.log('rotate', this.box)
     this.erasingData.push(null);
     this.erasingData.push(degrees>0?'rotateRight':'rotateLeft');
+    const width = this.editCanvas.width;
+    const height = this.editCanvas.height;
     const editCanvas = this.editCanvas;
-    editCanvas.width = this.box.height;
-    editCanvas.height = this.box.width;
-    this.bgCanvas.width = this.box.height;
-    this.bgCanvas.height = this.box.width;
+    editCanvas.width = height;
+    editCanvas.height = width;
+    console.log('rotate', editCanvas.width, editCanvas.height)
+    this.bgCanvas.width = height;
+    this.bgCanvas.height = width;
     this.undoDraw('redraw');
   }
   flip(val) {
     this.erasingData.push(null);
     this.erasingData.push(val);
-    const editCanvas = this.editCanvas;
-    editCanvas.width = this.box.width;
-    editCanvas.height = this.box.height;    
-    this.bgCanvas.width = this.box.width;
-    this.bgCanvas.height = this.box.height;
+    this.editCanvas.width = this.editCanvas.width;
+    this.editCanvas.height = this.editCanvas.height;    
+    this.bgCanvas.width = this.editCanvas.width;
+    this.bgCanvas.height = this.editCanvas.height;
     this.undoDraw('redraw');
   }
   undoErasing() {
     console.log('undasf')
-    if (this.erasingData[this.erasingData.length-1].indexOf('width') > 0) {
+    console.log(this.erasingData)
+    if (this.erasingData.length > 0 && this.erasingData[this.erasingData.length-1].indexOf('width') > 0) {
       const crop = JSON.parse(this.erasingData[this.erasingData.length -1]);
       console.log(this.lastBox);
+      this.box = this.lastBox;
+      tools().canvas.resize(this.lastBox.width, this.lastBox.height)
+    }
+    if (this.erasingData.length === 0) {
+      this.lastBox = {left: 0, top: 0, width: this.dimension.width, height: this.dimension.height}
       this.box = this.lastBox;
       tools().canvas.resize(this.lastBox.width, this.lastBox.height)
     }
@@ -320,16 +341,37 @@ export class BrushTool {
     // this.mainRef.getElementsByClassName('fabric-editor')[0].style.scale = 0.5;
   }
   download() {
-    const width = this.originalImage.width;
-    const height = this.originalImage.height;
+    const rate = this.originalImage.width/this.dimension.width;
+    const width = this.box.width * rate;
+    const height = this.box.height * rate;
+    const left = this.box.left * rate;
+    const top = this.box.top * rate;
     const canvas = document.createElement('canvas');
+
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, width, height);
-    ctx.drawImage(this.bgCanvas, 0, 0, this.box.width, this.box.height, 0, 0, width, height);
+    ctx.drawImage(this.bgCanvas, 0, 0, this.bgCanvas.width, this.bgCanvas.height, 0, 0, width, height);
     ctx.globalCompositeOperation = "source-in";
-    ctx.drawImage(this.originalImage._element, 0, 0);
+    ctx.save();
+    ctx.translate(width/2, height/2);
+    for (var i = 0; i < this.erasingData.length; i++) {
+      if ((typeof this.erasingData[i] === 'string' || this.erasingData[i] instanceof String) && this.erasingData[i].indexOf('width') === -1) {
+        console.log(this.erasingData[i])
+        if (this.erasingData[i] === 'rotateLeft') {
+          ctx.rotate(-Math.PI / 2);  
+        } else if (this.erasingData[i] === 'rotateRight') {
+          ctx.rotate(Math.PI / 2); 
+        } else if (this.erasingData[i] === 'flipX') {
+          ctx.scale(-1, 1); 
+        } else if (this.erasingData[i] === 'flipY') {
+          ctx.scale(1, -1); 
+        }
+      }
+    }
+    ctx.drawImage(this.originalImage._element, left,top, width, height, -width/2, -height/2, width, height);
+    ctx.restore();
     const dataURL = canvas.toDataURL("image/png");
     const downloadLink = document.createElement("a");
     downloadLink.href = dataURL;
